@@ -5,7 +5,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-// --- שינוי כאן: נייבא את מודול https המובנה של Node.js ---
 const https = require('https'); 
 const Hebcal = require('hebcal'); // ייבוא ספריית hebcal המקומית
 
@@ -461,6 +460,16 @@ app.get('/api/convert-hebrew-split', async (req, res) => {
         return res.status(400).json({ error: 'חובה לספק חודש עברי (hmonth) ויום עברי (hday).', errorCode: 'MISSING_PARAMETERS' });
     }
 
+    // Convert hday from Gematria to number if it's not already a number
+    let numericHday = parseInt(hday, 10);
+    if (isNaN(numericHday)) {
+        numericHday = hebrewGematriaToNumber(hday);
+        if (numericHday === null) {
+            return res.status(400).json({ error: `יום עברי לא חוקי: '${hday}'. אנא וודא איות נכון או פורמט מספרי.`, errorCode: 'INVALID_HEBREW_DAY' });
+        }
+    }
+
+
     // Combine Gematria parts to form the full Hebrew year
     let hyearValue = 0;
     let gematriaYearString = '';
@@ -514,7 +523,7 @@ app.get('/api/convert-hebrew-split', async (req, res) => {
     const hyear = hyearValue;
 
     // Check ancientDateLookup first
-    const lookupKey = `${hyear}-${hmonth}-${hday}`;
+    const lookupKey = `${hyear}-${hmonth}-${numericHday}`; // Use numericHday for lookup key
     if (ancientDateLookup[lookupKey]) {
         const lookupResult = ancientDateLookup[lookupKey];
         const [gd, gm, gy] = lookupResult.gregorian.split('/').map(Number);
@@ -522,7 +531,7 @@ app.get('/api/convert-hebrew-split', async (req, res) => {
             hebrew: {
                 year: hyear,
                 month: hmonth,
-                day: parseInt(hday)
+                day: numericHday // Use numericHday for output
             },
             gregorian: {
                 year: gy,
@@ -541,7 +550,8 @@ app.get('/api/convert-hebrew-split', async (req, res) => {
             return res.status(400).json({ error: `שם חודש עברי לא חוקי: '${hmonth}'. אנא וודא איות נכון (לדוגמה: "תשרי", "אב").`, errorCode: 'INVALID_HEBREW_MONTH' });
         }
 
-        const hebcalApiUrl = `https://www.hebcal.com/converter?cfg=json&hy=${hyear}&hm=${englishMonthName}&hd=${hday}&h2g=1`;
+        const hebcalApiUrl = `https://www.hebcal.com/converter?cfg=json&hy=${hyear}&hm=${englishMonthName}&hd=${numericHday}&h2g=1`; // שינוי כאן: שימוש ב-numericHday
+
         const data = await makeHttpsRequest(hebcalApiUrl); // שימוש בפונקציית העזר makeHttpsRequest
 
         if (data.error) {
@@ -565,7 +575,7 @@ app.get('/api/convert-hebrew-split', async (req, res) => {
             hebrew: {
                 year: hyear,
                 month: hmonth,
-                day: parseInt(hday)
+                day: numericHday // Use numericHday for output
             },
             gregorian: {
                 year: gregorianYear,
