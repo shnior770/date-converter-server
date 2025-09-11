@@ -292,10 +292,7 @@ app.get('/api/convert-hebrew', async (req, res) => {
     }
 
     try {
-        const englishMonthName = HEBREW_MONTH_TO_NUMBER_AND_ENGLISH[hmonth]?.en;
-
-        if (!englishMonthName) {
-            return res.status(400).json({ error: `שם חודש עברי לא חוקי: '${hmonth}'. אנא וודא איות נכון (לדוגמה: "תשרי", "אב").`, errorCode: 'INVALID_HEBREW_MONTH' });
+        const englishMonthName = hmonth;
         }
 
         const hebcalApiUrl = `https://www.hebcal.com/converter?cfg=json&hy=${hyear}&hm=${englishMonthName}&hd=${hday}&h2g=1`;
