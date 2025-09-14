@@ -1,7 +1,12 @@
 // index.js
 // זהו קובץ ה-API הראשי, מותאם לפריסה כ-Web Service ב-Render.
 // הוא משתמש ב-Express.js כדי ליצור שרת HTTP שמקשיב לפורט.
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:8000"}})
+app.use(cors({
+  origin: 'http://localhost:8000', // ← או '*' אם אתה רוצה לאפשר לכולם
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
+
 
 
 const express = require('express');
